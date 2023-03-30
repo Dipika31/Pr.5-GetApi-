@@ -7,10 +7,12 @@
 
 import UIKit
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate {
    
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var searchbar: UISearchBar!
     var welcome : [WelcomeElement] = []
+    var welcome2 : [WelcomeElement] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,6 +30,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                  if error
                         == nil{
                      self.welcome = try JSONDecoder().decode([WelcomeElement].self, from: data!)
+                     self.welcome2 = self.welcome
                      DispatchQueue.main.async {
                          self.tableView.reloadData()
                      }
@@ -53,15 +56,16 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        navigation(fImg: linkToImage(link: welcome[indexPath.row].flags.png), fName: welcome[indexPath.row].name.common, fOfficial: welcome[indexPath.row].name.official)
+        navigation(fImg: linkToImage(link: welcome[indexPath.row].flags.png), fName: welcome[indexPath.row].name.common,fPopulation: welcome[indexPath.row].population,fCurrency: linkToImage(link: welcome[indexPath.row].coatOfArms.png!))
     }
     
-    func navigation(fImg:UIImage,fName:String,fOfficial:String)
+    func navigation(fImg:UIImage,fName:String,fPopulation:Int,fCurrency:UIImage)
     {
         let navigate = storyboard?.instantiateViewController(withIdentifier: "ViewControllerNavigate") as! ViewControllerNavigate
         navigate.flagImg = fImg
         navigate.flagN = fName
-        navigate.flagO = fOfficial
+        navigate.flagP = fPopulation
+        navigate.flagC = fCurrency
         navigationController?.pushViewController(navigate, animated: true)
     }
     
@@ -70,6 +74,20 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         let url1 = URL(string: link)
         let data = try? Data(contentsOf: url1! as URL)
         return UIImage(data: data!)!
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text == ""
+        {
+            welcome = welcome2
+        }
+        else
+        {
+            welcome = welcome2.filter({ i in
+                return i.name.common.contains(searchBar.text!)
+            })
+        }
+        tableView.reloadData()
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
